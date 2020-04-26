@@ -1,6 +1,8 @@
-# Modification
+===============================
+Modification
+===============================
 
-This is a lightly modified version of deepwalk that accepts biased walks instead of purely random walks. 
+This is a lightly modified version of deepwalk that accepts biased walks instead of purely random walks. See the forked repository for the original code. 
 
 
 ===============================

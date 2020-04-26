@@ -31,24 +31,24 @@ test_requirements = [
 ]
 
 setup(
-    name='deepwalk',
+    name='mod_deepwalk',
     version='1.0.3',
     description='DeepWalk online learning of social representations.',
     long_description=readme + '\n\n' + history,
     author='Bryan Perozzi',
     author_email='bperozzi@cs.stonybrook.edu',
-    url='https://github.com/phanein/deepwalk',
+    url='https://github.com/phanein/mod_deepwalk',
     packages=[
-        'deepwalk',
+        'mod_deepwalk',
     ],
-    entry_points={'console_scripts': ['deepwalk = deepwalk.__main__:main']},
-    package_dir={'deepwalk':
-                 'deepwalk'},
+    entry_points={'console_scripts': ['mod_deepwalk = mod_deepwalk.__main__:main']},
+    package_dir={'mod_deepwalk':
+                 'mod_deepwalk'},
     include_package_data=True,
     install_requires=requirements,
     license="GPLv3",
     zip_safe=False,
-    keywords='deepwalk',
+    keywords='mod_deepwalk',
     classifiers=[
         'Development Status :: 2 - Pre-Alpha',
         'Intended Audience :: Developers',

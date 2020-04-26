@@ -11,12 +11,13 @@ from six.moves import zip
 
 from . import graph
 
-logger = logging.getLogger("deepwalk")
+logger = logging.getLogger("mod_deepwalk")
 
 __current_graph = None
 
 # speed up the string encoding
 __vertex2str = None
+
 
 def count_words(file):
   """ Counts the word frequences in a list of sentences.
@@ -48,6 +49,7 @@ def count_lines(f):
   else:
     return 0
 
+
 def _write_walks_to_disk(args):
   num_paths, path_length, alpha, rand, f = args
   G = __current_graph
@@ -58,6 +60,7 @@ def _write_walks_to_disk(args):
       fout.write(u"{}\n".format(u" ".join(v for v in walk)))
   logger.debug("Generated new file {}, it took {} seconds".format(f, time() - t_0))
   return f
+
 
 def write_walks_to_disk(G, filebase, num_paths, path_length, alpha=0, rand=random.Random(0), num_workers=cpu_count(),
                         always_rebuild=True):
@@ -95,6 +98,7 @@ class WalksCorpus(object):
       with open(file, 'r') as f:
         for line in f:
           yield line.split()
+
 
 def combine_files_iter(file_list):
   for file in file_list:

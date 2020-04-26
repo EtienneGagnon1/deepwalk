@@ -17,8 +17,9 @@ from random import shuffle
 from itertools import product,permutations
 from scipy.io import loadmat
 from scipy.sparse import issparse
+import numpy as np
 
-logger = logging.getLogger("deepwalk")
+logger = logging.getLogger("mod_deepwalk")
 
 
 __author__ = "Bryan Perozzi"
@@ -27,9 +28,9 @@ __email__ = "bperozzi@cs.stonybrook.edu"
 LOGFORMAT = "%(asctime).19s %(levelname)s %(filename)s: %(lineno)s %(message)s"
 
 class Graph(defaultdict):
-  """Efficient basic implementation of nx `Graph' â€“ Undirected graphs with self loops"""  
+  """Efficient basic implementation of nx `Graph' â€“ Undirected graphs with self loops"""
   def __init__(self):
-    super(Graph, self).__init__(list)
+    super(Graph, self).__init__(defaultdict)
 
   def nodes(self):
     return self.keys()
@@ -70,7 +71,6 @@ class Graph(defaultdict):
     logger.info('make_consistent: made consistent in {}s'.format(t1-t0))
 
     self.remove_self_loops()
-
     return self
 
   def remove_self_loops(self):
@@ -144,6 +144,36 @@ class Graph(defaultdict):
         break
     return [str(node) for node in path]
 
+  def weighted_random_walk(self, path_length, reset=random.Random(), alpha=0, start=None):
+    G = self
+    rand = np.random
+
+    if start:
+      path = [start]
+    else:
+      # Sampling is uniform w.r.t V, and not w.r.t E
+      path = [rand.choice(list(G.keys()))]
+
+    while len(path) < path_length:
+      cur = path[-1]
+      current_node = G[cur]
+
+      if len(current_node) > 0:
+        transitions = list(current_node.keys())
+        edge_weights = [current_node[other_node]['weight'] for other_node in transitions]
+        edge_weights = [int(weight) for weight in edge_weights]
+
+        normalized_edge_weights = [weight/sum(edge_weights) for weight in edge_weights]  # turns weight into probability
+
+        if reset.random() >= alpha:
+
+          path.append(rand.choice(list(G[cur].keys()), p=normalized_edge_weights))
+        else:
+          path.append(path[0])
+      else:
+        break
+    return [str(node) for node in path]
+
 # TODO add build_walks in here
 
 def build_deepwalk_corpus(G, num_paths, path_length, alpha=0,
@@ -159,6 +189,21 @@ def build_deepwalk_corpus(G, num_paths, path_length, alpha=0,
   
   return walks
 
+
+def build_weighted_deepwalk_corpus(G, num_paths, path_length, alpha=0,
+                          rand=random.Random(0)):
+  walks = []
+
+  nodes = list(G.nodes())
+
+  for cnt in range(num_paths):
+    rand.shuffle(nodes)
+    for node in nodes:
+      walks.append(G.weighted_random_walk(path_length, reset=rand, alpha=alpha, start=node))
+
+  return walks
+
+
 def build_deepwalk_corpus_iter(G, num_paths, path_length, alpha=0,
                       rand=random.Random(0)):
   walks = []
@@ -170,10 +215,8 @@ def build_deepwalk_corpus_iter(G, num_paths, path_length, alpha=0,
     for node in nodes:
       yield G.random_walk(path_length, rand=rand, alpha=alpha, start=node)
 
-
 def clique(size):
     return from_adjlist(permutations(range(1,size+1)))
-
 
 # http://stackoverflow.com/questions/312443/how-do-you-split-a-list-into-evenly-sized-chunks-in-python
 def grouper(n, iterable, padvalue=None):
@@ -249,6 +292,20 @@ def load_edgelist(file_, undirected=True):
         G[y].append(x)
   
   G.make_consistent()
+  return G
+
+
+def load_weighted_edgelist(file_, undirected=True):
+  G = Graph()
+  with open(file_) as f:
+    for l in f:
+      line = l.strip().split()
+      key = line[0]
+      value = {line[1]: {'weight': line[2]}}
+      G[key].update(value)
+      if undirected:
+        G[key].update(value)
+  # G.make_consistent()
   return G
 
 

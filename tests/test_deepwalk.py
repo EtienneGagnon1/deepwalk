@@ -5,12 +5,12 @@
 test_deepwalk
 ----------------------------------
 
-Tests for `deepwalk` module.
+Tests for `mod_deepwalk` module.
 """
 
 import unittest
 
-from deepwalk import deepwalk
+from mod_deepwalk import deepwalk
 
 
 class TestDeepwalk(unittest.TestCase):

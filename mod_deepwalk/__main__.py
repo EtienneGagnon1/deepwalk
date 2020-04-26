@@ -1,6 +1,13 @@
 #! /usr/bin/env python
 # -*- coding: utf-8 -*-
 
+"""
+This needs to be run from the command line with the following command:
+python -m mod_deepwalk args
+-m is necessary otherwise this will not be treated as a package and the relative import will fail.
+
+"""
+
 import os
 import sys
 import random
@@ -31,6 +38,8 @@ except AttributeError:
     except AttributeError:
         pass
 
+
+
 logger = logging.getLogger(__name__)
 LOGFORMAT = "%(asctime).19s %(levelname)s %(filename)s: %(lineno)s %(message)s"
 
@@ -47,11 +56,14 @@ def debug(type_, value, tb):
 
 
 def process(args):
-
   if args.format == "adjlist":
     G = graph.load_adjacencylist(args.input, undirected=args.undirected)
+
   elif args.format == "edgelist":
-    G = graph.load_edgelist(args.input, undirected=args.undirected)
+      if args.weighted:
+          G = graph.load_weighted_edgelist(args.input, undirected=args.undirected)
+      else:
+          G = graph.load_edgelist(args.input, undirected=args.undirected)
   elif args.format == "mat":
     G = graph.load_matfile(args.input, variable_name=args.matfile_variable_name, undirected=args.undirected)
   else:
@@ -69,8 +81,13 @@ def process(args):
 
   if data_size < args.max_memory_data_size:
     print("Walking...")
-    walks = graph.build_deepwalk_corpus(G, num_paths=args.number_walks,
-                                        path_length=args.walk_length, alpha=0, rand=random.Random(args.seed))
+
+    if not args.weighted:
+        walks = graph.build_deepwalk_corpus(G, num_paths=args.number_walks,
+                                            path_length=args.walk_length, alpha=0, rand=random.Random(args.seed))
+    else:
+        walks = graph.build_weighted_deepwalk_corpus(G, num_paths=args.number_walks,
+                                            path_length=args.walk_length, alpha=0, rand=random.Random(args.seed))
     print("Training...")
     model = Word2Vec(walks, size=args.representation_size, window=args.window_size, min_count=0, sg=1, hs=1, workers=args.workers)
   else:
@@ -99,7 +116,7 @@ def process(args):
 
 
 def main():
-  parser = ArgumentParser("deepwalk",
+  parser = ArgumentParser("mod_deepwalk",
                           formatter_class=ArgumentDefaultsHelpFormatter,
                           conflict_handler='resolve')
 
@@ -150,6 +167,9 @@ def main():
   parser.add_argument('--workers', default=1, type=int,
                       help='Number of parallel processes.')
 
+  parser.add_argument('--weighted', default=False, type=bool,
+                      help='weighted graph or not')
+
 
   args = parser.parse_args()
   numeric_level = getattr(logging, args.log.upper(), None)
@@ -161,5 +181,8 @@ def main():
 
   process(args)
 
+
 if __name__ == "__main__":
   sys.exit(main())
+
+
